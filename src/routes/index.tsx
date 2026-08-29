@@ -495,8 +495,11 @@ function CityHall() {
                             </p>
                           </div>
                           <button
-                            onClick={() => setSelected(service)}
-                            className="rounded-lg bg-gold px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-transform active:scale-[0.97]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelected(service);
+                            }}
+                            className="rounded-lg bg-gold px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-105 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none active:scale-[0.97]"
                           >
                             Igénylés
                           </button>
