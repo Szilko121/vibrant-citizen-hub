@@ -25,6 +25,18 @@ import sealImage from "@/assets/nexus-seal.png";
 import catOkmanyok from "@/assets/cat-okmanyok.jpg";
 import catAuto from "@/assets/cat-auto.jpg";
 import catEngedelyek from "@/assets/cat-engedelyek.jpg";
+import svc_szemelyi from "@/assets/svc-szemelyi.jpg";
+import svc_lakcim from "@/assets/svc-lakcim.jpg";
+import svc_anyakonyv from "@/assets/svc-anyakonyv.jpg";
+import svc_nevvaltas from "@/assets/svc-nevvaltas.jpg";
+import svc_jogositvany from "@/assets/svc-jogositvany.jpg";
+import svc_atiras from "@/assets/svc-atiras.jpg";
+import svc_forgalmi from "@/assets/svc-forgalmi.jpg";
+import svc_rendszam from "@/assets/svc-rendszam.jpg";
+import svc_fegyver from "@/assets/svc-fegyver.jpg";
+import svc_vadasz from "@/assets/svc-vadasz.jpg";
+import svc_pilota from "@/assets/svc-pilota.jpg";
+import svc_halasz from "@/assets/svc-halasz.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -53,6 +65,7 @@ type Service = {
   price: number;
   time: string;
   icon: typeof IdCard;
+  image: string;
   requirements: string[];
 };
 
@@ -77,6 +90,7 @@ const categories: Category[] = [
     services: [
       {
         id: "szemelyi",
+        image: svc_szemelyi,
         title: "Személyi igazolvány",
         description: "Új személyazonosító okmány kiállítása vagy pótlása fotóval.",
         price: 3000,
@@ -86,6 +100,7 @@ const categories: Category[] = [
       },
       {
         id: "lakcim",
+        image: svc_lakcim,
         title: "Lakcímkártya",
         description: "Új lakcím bejegyzése vagy a meglévő cím módosítása.",
         price: 1500,
@@ -95,6 +110,7 @@ const categories: Category[] = [
       },
       {
         id: "anyakonyv",
+        image: svc_anyakonyv,
         title: "Anyakönyvi kivonat",
         description: "Születési vagy házassági kivonat hivatalos kiállítása.",
         price: 800,
@@ -104,6 +120,7 @@ const categories: Category[] = [
       },
       {
         id: "nevvaltas",
+        image: svc_nevvaltas,
         title: "Névváltoztatás",
         description: "Hivatalos névmódosítás átvezetése a nyilvántartásban.",
         price: 5000,
@@ -123,6 +140,7 @@ const categories: Category[] = [
     services: [
       {
         id: "jogositvany",
+        image: svc_jogositvany,
         title: "Vezetői engedély",
         description: "Jogosítvány kiállítása a sikeres vizsga után, kategóriánként.",
         price: 4500,
@@ -132,6 +150,7 @@ const categories: Category[] = [
       },
       {
         id: "atiras",
+        image: svc_atiras,
         title: "Jármű átírás",
         description: "Tulajdonosváltás átvezetése a központi járműnyilvántartásban.",
         price: 2500,
@@ -141,6 +160,7 @@ const categories: Category[] = [
       },
       {
         id: "forgalmi",
+        image: svc_forgalmi,
         title: "Forgalmi engedély pótlás",
         description: "Elveszett vagy sérült forgalmi engedély újrakiállítása.",
         price: 1200,
@@ -150,6 +170,7 @@ const categories: Category[] = [
       },
       {
         id: "rendszam",
+        image: svc_rendszam,
         title: "Egyedi rendszám",
         description: "Saját rendszámtábla igénylése, ellenőrzés után aktiválva.",
         price: 15000,
@@ -169,6 +190,7 @@ const categories: Category[] = [
     services: [
       {
         id: "fegyver",
+        image: svc_fegyver,
         title: "Fegyvertartási engedély",
         description: "Rendőrségi ellenőrzés utáni engedély rövid csövű fegyverre.",
         price: 25000,
@@ -178,6 +200,7 @@ const categories: Category[] = [
       },
       {
         id: "vadasz",
+        image: svc_vadasz,
         title: "Vadászengedély",
         description: "Vadászati jogosultság a kijelölt megyei területekre.",
         price: 12000,
@@ -187,6 +210,7 @@ const categories: Category[] = [
       },
       {
         id: "pilota",
+        image: svc_pilota,
         title: "Pilóta engedély",
         description: "Légijármű vezetési jogosultság magánrepülőgépre és helikopterre.",
         price: 40000,
@@ -196,6 +220,7 @@ const categories: Category[] = [
       },
       {
         id: "halasz",
+        image: svc_halasz,
         title: "Horgászengedély",
         description: "Éves horgászati engedély a városi tavakra és partszakaszokra.",
         price: 3500,
@@ -367,24 +392,33 @@ function CityHall() {
                     return (
                       <article
                         key={service.id}
-                        className={`rounded-2xl border p-4 transition-colors ${
+                        className={`overflow-hidden rounded-2xl border transition-colors ${
                           active
                             ? "border-primary/70 bg-primary/10"
                             : "border-border bg-secondary/25 hover:border-primary/30"
                         }`}
                       >
-                        <div className="flex items-start gap-3">
-                          <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-secondary text-primary">
+                        <div className="relative h-32 overflow-hidden">
+                          <img
+                            src={service.image}
+                            alt={service.title}
+                            loading="lazy"
+                            width={768}
+                            height={512}
+                            className="h-full w-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-card/70 to-transparent" />
+                          <span className="absolute top-2.5 left-2.5 grid size-9 place-items-center rounded-lg border border-border bg-card/85 text-primary backdrop-blur-sm">
                             <Icon className="size-4.5" />
                           </span>
-                          <div>
-                            <h3 className="text-sm font-semibold">{service.title}</h3>
-                            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                              {service.description}
-                            </p>
-                          </div>
                         </div>
-                        <div className="mt-4 flex items-center justify-between border-t border-border pt-3">
+                        <div className="p-4">
+                          <h3 className="text-sm font-semibold">{service.title}</h3>
+                          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                            {service.description}
+                          </p>
+                        </div>
+                        <div className="mx-4 mb-4 flex items-center justify-between border-t border-border pt-3">
                           <div>
                             <p className="font-mono text-sm text-primary">
                               {formatPrice(service.price)}
