@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+import { fetchNui, isInGame, useNuiEvent, type PlayerData } from "@/lib/nui";
 import {
   IdCard,
   Car,
@@ -235,18 +237,76 @@ const categories: Category[] = [
 const formatPrice = (value: number) =>
   new Intl.NumberFormat("hu-HU").format(value) + " $";
 
+const MOCK_PLAYER: PlayerData = {
+  name: "Kovács Márk",
+  citizenId: "4821",
+  bank: 248900,
+  cash: 12400,
+  framework: "standalone",
+  inventory: "none",
+};
+
 function CityHall() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selected, setSelected] = useState<Service | null>(null);
   const [confirmed, setConfirmed] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [visible, setVisible] = useState(!isInGame());
+  const [player, setPlayer] = useState<PlayerData>(MOCK_PLAYER);
 
   const category = categories.find((c) => c.id === activeCategory) ?? null;
 
-  const submit = (service: Service) => {
-    setConfirmed(service.title);
+  const close = useCallback(() => {
+    setVisible(false);
+    setActiveCategory(null);
     setSelected(null);
-    setTimeout(() => setConfirmed(null), 3500);
+    void fetchNui("closeUi", {}, null);
+  }, []);
+
+  useNuiEvent<{ player: PlayerData }>("open", (data) => {
+    if (data?.player) setPlayer(data.player);
+    setVisible(true);
+  });
+  useNuiEvent<PlayerData>("updatePlayer", (data) => {
+    if (data) setPlayer(data);
+  });
+  useNuiEvent("close", () => setVisible(false));
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [close]);
+
+  const submit = async (service: Service) => {
+    if (pending) return;
+    setPending(true);
+    setError(null);
+
+    const result = await fetchNui<{ success: boolean; message?: string; player?: PlayerData }>(
+      "requestService",
+      { serviceId: service.id, categoryId: activeCategory, price: service.price },
+      { success: true, player: { ...player, bank: player.bank - service.price } },
+    );
+
+    setPending(false);
+
+    if (result?.player) setPlayer(result.player);
+
+    if (result?.success) {
+      setConfirmed(service.title);
+      setSelected(null);
+      setTimeout(() => setConfirmed(null), 3500);
+    } else {
+      setError(result?.message ?? "A kérelem elutasítva.");
+      setTimeout(() => setError(null), 3500);
+    }
   };
+
+  if (!visible) return null;
 
   return (
     <main className="grid-lines min-h-screen px-4 py-6 md:px-8 md:py-10">
@@ -277,15 +337,21 @@ function CityHall() {
                 <p className="font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
                   Állampolgár
                 </p>
-                <p className="text-sm font-semibold">Kovács Márk · #4821</p>
+                <p className="truncate text-sm font-semibold">
+                  {player.name}
+                  {player.citizenId ? ` · #${player.citizenId}` : ""}
+                </p>
               </div>
               <div className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2">
                 <p className="font-mono text-[10px] tracking-[0.18em] text-primary uppercase">
                   Bankszámla
                 </p>
-                <p className="font-mono text-sm">248 900 $</p>
+                <p className="font-mono text-sm">{formatPrice(player.bank)}</p>
               </div>
-              <button className="rounded-xl border border-border px-3 py-2.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground">
+              <button
+                onClick={close}
+                className="rounded-xl border border-border px-3 py-2.5 font-mono text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground active:scale-[0.97]"
+              >
                 Bezárás · ESC
               </button>
             </div>
@@ -385,17 +451,18 @@ function CityHall() {
               </div>
 
               <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_320px]">
-                <div className="grid content-start gap-3 sm:grid-cols-2">
+                <div className="grid content-start gap-3 grid-cols-1 min-[520px]:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3">
                   {category.services.map((service) => {
                     const Icon = service.icon;
                     const active = selected?.id === service.id;
                     return (
                       <article
                         key={service.id}
-                        className={`overflow-hidden rounded-2xl border transition-colors ${
+                        onClick={() => setSelected(service)}
+                        className={`group cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 active:translate-y-0 active:scale-[0.995] ${
                           active
-                            ? "border-primary/70 bg-primary/10"
-                            : "border-border bg-secondary/25 hover:border-primary/30"
+                            ? "border-primary/70 bg-primary/10 shadow-md shadow-primary/10"
+                            : "border-border bg-secondary/25 hover:border-primary/40 hover:bg-secondary/40"
                         }`}
                       >
                         <div className="relative h-32 overflow-hidden">
@@ -405,7 +472,7 @@ function CityHall() {
                             loading="lazy"
                             width={768}
                             height={512}
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-card/70 to-transparent" />
                           <span className="absolute top-2.5 left-2.5 grid size-9 place-items-center rounded-lg border border-border bg-card/85 text-primary backdrop-blur-sm">
@@ -428,8 +495,11 @@ function CityHall() {
                             </p>
                           </div>
                           <button
-                            onClick={() => setSelected(service)}
-                            className="rounded-lg bg-gold px-3.5 py-2 text-xs font-semibold text-primary-foreground transition-transform active:scale-[0.97]"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelected(service);
+                            }}
+                            className="rounded-lg bg-gold px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-105 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none active:scale-[0.97]"
                           >
                             Igénylés
                           </button>
@@ -477,10 +547,11 @@ function CityHall() {
                       </div>
 
                       <button
-                        onClick={() => submit(selected)}
-                        className="mt-3 w-full rounded-xl bg-gold py-3 text-sm font-semibold text-primary-foreground transition-transform active:scale-[0.98]"
+                        onClick={() => void submit(selected)}
+                        disabled={pending}
+                        className="mt-3 w-full rounded-xl bg-gold py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-105 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.98]"
                       >
-                        Kérelem benyújtása
+                        {pending ? "Feldolgozás…" : "Kérelem benyújtása"}
                       </button>
                     </div>
                   ) : (
@@ -519,6 +590,17 @@ function CityHall() {
             <p className="text-sm">
               Kérelem benyújtva: <span className="font-semibold">{confirmed}</span>
             </p>
+          </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
+          <div className="panel-glass flex items-center gap-3 rounded-xl border border-destructive/50 px-4 py-3">
+            <span className="grid size-6 place-items-center rounded-full bg-destructive text-primary-foreground">
+              <X className="size-3.5" />
+            </span>
+            <p className="text-sm">{error}</p>
           </div>
         </div>
       )}
