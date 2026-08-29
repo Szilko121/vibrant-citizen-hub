@@ -1,5 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+
+import { fetchNui, isInGame, useNuiEvent, type PlayerData } from "@/lib/nui";
 import {
   IdCard,
   Car,
