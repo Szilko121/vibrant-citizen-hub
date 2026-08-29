@@ -237,18 +237,76 @@ const categories: Category[] = [
 const formatPrice = (value: number) =>
   new Intl.NumberFormat("hu-HU").format(value) + " $";
 
+const MOCK_PLAYER: PlayerData = {
+  name: "Kovács Márk",
+  citizenId: "4821",
+  bank: 248900,
+  cash: 12400,
+  framework: "standalone",
+  inventory: "none",
+};
+
 function CityHall() {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selected, setSelected] = useState<Service | null>(null);
   const [confirmed, setConfirmed] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const [visible, setVisible] = useState(!isInGame());
+  const [player, setPlayer] = useState<PlayerData>(MOCK_PLAYER);
 
   const category = categories.find((c) => c.id === activeCategory) ?? null;
 
-  const submit = (service: Service) => {
-    setConfirmed(service.title);
+  const close = useCallback(() => {
+    setVisible(false);
+    setActiveCategory(null);
     setSelected(null);
-    setTimeout(() => setConfirmed(null), 3500);
+    void fetchNui("closeUi", {}, null);
+  }, []);
+
+  useNuiEvent<{ player: PlayerData }>("open", (data) => {
+    if (data?.player) setPlayer(data.player);
+    setVisible(true);
+  });
+  useNuiEvent<PlayerData>("updatePlayer", (data) => {
+    if (data) setPlayer(data);
+  });
+  useNuiEvent("close", () => setVisible(false));
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [close]);
+
+  const submit = async (service: Service) => {
+    if (pending) return;
+    setPending(true);
+    setError(null);
+
+    const result = await fetchNui<{ success: boolean; message?: string; player?: PlayerData }>(
+      "requestService",
+      { serviceId: service.id, categoryId: activeCategory, price: service.price },
+      { success: true, player: { ...player, bank: player.bank - service.price } },
+    );
+
+    setPending(false);
+
+    if (result?.player) setPlayer(result.player);
+
+    if (result?.success) {
+      setConfirmed(service.title);
+      setSelected(null);
+      setTimeout(() => setConfirmed(null), 3500);
+    } else {
+      setError(result?.message ?? "A kérelem elutasítva.");
+      setTimeout(() => setError(null), 3500);
+    }
   };
+
+  if (!visible) return null;
 
   return (
     <main className="grid-lines min-h-screen px-4 py-6 md:px-8 md:py-10">
