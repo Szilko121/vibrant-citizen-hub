@@ -451,17 +451,18 @@ function CityHall() {
               </div>
 
               <div className="mt-5 grid gap-4 lg:grid-cols-[1fr_320px]">
-                <div className="grid content-start gap-3 sm:grid-cols-2">
+                <div className="grid content-start gap-3 grid-cols-1 min-[520px]:grid-cols-2 lg:grid-cols-2 2xl:grid-cols-3">
                   {category.services.map((service) => {
                     const Icon = service.icon;
                     const active = selected?.id === service.id;
                     return (
                       <article
                         key={service.id}
-                        className={`overflow-hidden rounded-2xl border transition-colors ${
+                        onClick={() => setSelected(service)}
+                        className={`group cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 active:translate-y-0 active:scale-[0.995] ${
                           active
-                            ? "border-primary/70 bg-primary/10"
-                            : "border-border bg-secondary/25 hover:border-primary/30"
+                            ? "border-primary/70 bg-primary/10 shadow-md shadow-primary/10"
+                            : "border-border bg-secondary/25 hover:border-primary/40 hover:bg-secondary/40"
                         }`}
                       >
                         <div className="relative h-32 overflow-hidden">
@@ -471,7 +472,7 @@ function CityHall() {
                             loading="lazy"
                             width={768}
                             height={512}
-                            className="h-full w-full object-cover"
+                            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
                           />
                           <div className="absolute inset-0 bg-gradient-to-t from-card/70 to-transparent" />
                           <span className="absolute top-2.5 left-2.5 grid size-9 place-items-center rounded-lg border border-border bg-card/85 text-primary backdrop-blur-sm">
