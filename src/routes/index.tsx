@@ -547,10 +547,11 @@ function CityHall() {
                       </div>
 
                       <button
-                        onClick={() => submit(selected)}
-                        className="mt-3 w-full rounded-xl bg-gold py-3 text-sm font-semibold text-primary-foreground transition-transform active:scale-[0.98]"
+                        onClick={() => void submit(selected)}
+                        disabled={pending}
+                        className="mt-3 w-full rounded-xl bg-gold py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-105 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.98]"
                       >
-                        Kérelem benyújtása
+                        {pending ? "Feldolgozás…" : "Kérelem benyújtása"}
                       </button>
                     </div>
                   ) : (
