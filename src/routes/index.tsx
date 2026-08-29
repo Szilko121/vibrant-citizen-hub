@@ -337,15 +337,21 @@ function CityHall() {
                 <p className="font-mono text-[10px] tracking-[0.18em] text-muted-foreground uppercase">
                   Állampolgár
                 </p>
-                <p className="text-sm font-semibold">Kovács Márk · #4821</p>
+                <p className="truncate text-sm font-semibold">
+                  {player.name}
+                  {player.citizenId ? ` · #${player.citizenId}` : ""}
+                </p>
               </div>
               <div className="rounded-xl border border-primary/40 bg-primary/10 px-3 py-2">
                 <p className="font-mono text-[10px] tracking-[0.18em] text-primary uppercase">
                   Bankszámla
                 </p>
-                <p className="font-mono text-sm">248 900 $</p>
+                <p className="font-mono text-sm">{formatPrice(player.bank)}</p>
               </div>
-              <button className="rounded-xl border border-border px-3 py-2.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground">
+              <button
+                onClick={close}
+                className="rounded-xl border border-border px-3 py-2.5 font-mono text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground active:scale-[0.97]"
+              >
                 Bezárás · ESC
               </button>
             </div>
