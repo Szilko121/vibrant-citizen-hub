@@ -593,6 +593,17 @@ function CityHall() {
           </div>
         </div>
       )}
+
+      {error && (
+        <div className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
+          <div className="panel-glass flex items-center gap-3 rounded-xl border border-destructive/50 px-4 py-3">
+            <span className="grid size-6 place-items-center rounded-full bg-destructive text-primary-foreground">
+              <X className="size-3.5" />
+            </span>
+            <p className="text-sm">{error}</p>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
