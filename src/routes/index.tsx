@@ -288,12 +288,24 @@ function CityHall() {
 
   const submit = async (service: Service) => {
     if (pending) return;
+
+    const doc = docs[service.id];
+    if (documentForms[service.id] && !doc) {
+      setDocService(service);
+      return;
+    }
+
     setPending(true);
     setError(null);
 
     const result = await fetchNui<{ success: boolean; message?: string; player?: PlayerData }>(
       "requestService",
-      { serviceId: service.id, categoryId: activeCategory, price: service.price },
+      {
+        serviceId: service.id,
+        categoryId: activeCategory,
+        price: service.price,
+        document: doc ?? null,
+      },
       { success: true, player: { ...player, bank: player.bank - service.price } },
     );
 
@@ -304,6 +316,11 @@ function CityHall() {
     if (result?.success) {
       setConfirmed(service.title);
       setSelected(null);
+      setDocs((prev) => {
+        const next = { ...prev };
+        delete next[service.id];
+        return next;
+      });
       setTimeout(() => setConfirmed(null), 3500);
     } else {
       setError(result?.message ?? "A kérelem elutasítva.");
@@ -313,7 +330,27 @@ function CityHall() {
 
   if (!visible) return null;
 
+  if (docService && documentForms[docService.id]) {
+    return (
+      <DocumentSheet
+        form={documentForms[docService.id]}
+        serviceTitle={docService.title}
+        playerName={player.name}
+        existing={docs[docService.id]}
+        onBack={() => setDocService(null)}
+        onComplete={(doc) => {
+          setDocs((prev) => ({ ...prev, [docService.id]: doc }));
+          setSelected(docService);
+          setDocService(null);
+          setConfirmed(`${docService.title} — dokumentum kitöltve`);
+          setTimeout(() => setConfirmed(null), 3000);
+        }}
+      />
+    );
+  }
+
   return (
+
     <main className="grid-lines min-h-screen px-4 py-6 md:px-8 md:py-10">
       <div className="mx-auto max-w-6xl">
         <div className="panel-glass overflow-hidden rounded-3xl border border-border">
