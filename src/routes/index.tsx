@@ -283,11 +283,17 @@ function CityHall() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key !== "Escape") return;
+      if (docService) {
+        setDocService(null);
+        return;
+      }
+      close();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [close]);
+  }, [close, docService]);
+
 
   const submit = async (service: Service) => {
     if (pending) return;
