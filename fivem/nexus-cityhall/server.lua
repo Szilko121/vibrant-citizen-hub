@@ -259,6 +259,16 @@ RegisterNetEvent('nexus-cityhall:server:requestService', function(requestId, dat
         issued = os.date('%Y-%m-%d %H:%M'),
     }
 
+    -- A UI-ban kitöltött és aláírt dokumentum adatai (ha van)
+    if type(data.document) == 'table' then
+        metadata.signedBy = data.document.signedBy
+        metadata.signedAt = data.document.signedAt
+        if type(data.document.values) == 'table' then
+            metadata.form = data.document.values
+        end
+    end
+
+
     local ok = giveItem(src, player, service.item, 1, metadata)
 
     payload = buildPlayerPayload(src)

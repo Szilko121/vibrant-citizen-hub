@@ -20,7 +20,12 @@ import {
   X,
   ChevronRight,
   ChevronLeft,
+  FileSignature,
 } from "lucide-react";
+
+import { DocumentSheet } from "@/components/DocumentSheet";
+import { documentForms, type FilledDoc } from "@/lib/documents";
+
 
 import heroImage from "@/assets/cityhall-hero.jpg";
 import sealImage from "@/assets/nexus-seal.png";
@@ -254,6 +259,9 @@ function CityHall() {
   const [pending, setPending] = useState(false);
   const [visible, setVisible] = useState(!isInGame());
   const [player, setPlayer] = useState<PlayerData>(MOCK_PLAYER);
+  const [docs, setDocs] = useState<Record<string, FilledDoc>>({});
+  const [docService, setDocService] = useState<Service | null>(null);
+
 
   const category = categories.find((c) => c.id === activeCategory) ?? null;
 
@@ -275,20 +283,38 @@ function CityHall() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
+      if (e.key !== "Escape") return;
+      if (docService) {
+        setDocService(null);
+        return;
+      }
+      close();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [close]);
+  }, [close, docService]);
+
 
   const submit = async (service: Service) => {
     if (pending) return;
+
+    const doc = docs[service.id];
+    if (documentForms[service.id] && !doc) {
+      setDocService(service);
+      return;
+    }
+
     setPending(true);
     setError(null);
 
     const result = await fetchNui<{ success: boolean; message?: string; player?: PlayerData }>(
       "requestService",
-      { serviceId: service.id, categoryId: activeCategory, price: service.price },
+      {
+        serviceId: service.id,
+        categoryId: activeCategory,
+        price: service.price,
+        document: doc ?? null,
+      },
       { success: true, player: { ...player, bank: player.bank - service.price } },
     );
 
@@ -299,6 +325,11 @@ function CityHall() {
     if (result?.success) {
       setConfirmed(service.title);
       setSelected(null);
+      setDocs((prev) => {
+        const next = { ...prev };
+        delete next[service.id];
+        return next;
+      });
       setTimeout(() => setConfirmed(null), 3500);
     } else {
       setError(result?.message ?? "A kérelem elutasítva.");
@@ -308,7 +339,29 @@ function CityHall() {
 
   if (!visible) return null;
 
+  const activeForm = docService ? documentForms[docService.id] : undefined;
+
+  if (docService && activeForm) {
+    return (
+      <DocumentSheet
+        form={activeForm}
+        serviceTitle={docService.title}
+        playerName={player.name}
+        existing={docs[docService.id]}
+        onBack={() => setDocService(null)}
+        onComplete={(doc) => {
+          setDocs((prev) => ({ ...prev, [docService.id]: doc }));
+          setSelected(docService);
+          setDocService(null);
+          setConfirmed(`${docService.title} — dokumentum kitöltve`);
+          setTimeout(() => setConfirmed(null), 3000);
+        }}
+      />
+    );
+  }
+
   return (
+
     <main className="grid-lines min-h-screen px-4 py-6 md:px-8 md:py-10">
       <div className="mx-auto max-w-6xl">
         <div className="panel-glass overflow-hidden rounded-3xl border border-border">
@@ -455,6 +508,8 @@ function CityHall() {
                   {category.services.map((service) => {
                     const Icon = service.icon;
                     const active = selected?.id === service.id;
+                    const filled = Boolean(docs[service.id]);
+                    const hasForm = Boolean(documentForms[service.id]);
                     return (
                       <article
                         key={service.id}
@@ -462,7 +517,9 @@ function CityHall() {
                         className={`group cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 active:translate-y-0 active:scale-[0.995] ${
                           active
                             ? "border-primary/70 bg-primary/10 shadow-md shadow-primary/10"
-                            : "border-border bg-secondary/25 hover:border-primary/40 hover:bg-secondary/40"
+                            : filled
+                              ? "border-success/60 bg-success/5 hover:border-success/80"
+                              : "border-border bg-secondary/25 hover:border-primary/40 hover:bg-secondary/40"
                         }`}
                       >
                         <div className="relative h-32 overflow-hidden">
@@ -478,6 +535,25 @@ function CityHall() {
                           <span className="absolute top-2.5 left-2.5 grid size-9 place-items-center rounded-lg border border-border bg-card/85 text-primary backdrop-blur-sm">
                             <Icon className="size-4.5" />
                           </span>
+                          {hasForm && (
+                            <span
+                              className={`absolute top-2.5 right-2.5 flex items-center gap-1 rounded-full border px-2 py-1 font-mono text-[10px] backdrop-blur-sm ${
+                                filled
+                                  ? "border-success/60 bg-success/15 text-success"
+                                  : "border-border bg-card/85 text-muted-foreground"
+                              }`}
+                            >
+                              {filled ? (
+                                <>
+                                  <Check className="size-3" /> Kitöltve
+                                </>
+                              ) : (
+                                <>
+                                  <FileSignature className="size-3" /> Kitöltendő
+                                </>
+                              )}
+                            </span>
+                          )}
                         </div>
                         <div className="p-4">
                           <h3 className="text-sm font-semibold">{service.title}</h3>
@@ -498,15 +574,17 @@ function CityHall() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelected(service);
+                              if (hasForm && !filled) setDocService(service);
                             }}
                             className="rounded-lg bg-gold px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-105 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none active:scale-[0.97]"
                           >
-                            Igénylés
+                            {hasForm && !filled ? "Kitöltés" : "Igénylés"}
                           </button>
                         </div>
                       </article>
                     );
                   })}
+
                 </div>
 
                 {/* Összegző panel */}
@@ -539,6 +617,43 @@ function CityHall() {
                         ))}
                       </ul>
 
+                      {documentForms[selected.id] && (
+                        <div
+                          className={`mt-4 rounded-xl border px-3 py-3 ${
+                            docs[selected.id]
+                              ? "border-success/50 bg-success/10"
+                              : "border-border bg-card/60"
+                          }`}
+                        >
+                          <p className="flex items-center gap-2 text-xs font-semibold">
+                            {docs[selected.id] ? (
+                              <>
+                                <Check className="size-3.5 text-success" /> Dokumentum kitöltve
+                              </>
+                            ) : (
+                              <>
+                                <FileSignature className="size-3.5 text-primary" /> Dokumentum
+                                kitöltése szükséges
+                              </>
+                            )}
+                          </p>
+                          <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                            Nyomtatvány {documentForms[selected.id]?.formNumber}
+                            {docs[selected.id]
+                              ? ` · aláírta: ${docs[selected.id]?.signedBy}`
+                              : ""}
+                          </p>
+                          <button
+                            onClick={() => setDocService(selected)}
+                            className="mt-2.5 w-full rounded-lg border border-primary/40 bg-primary/10 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/15 active:scale-[0.98]"
+                          >
+                            {docs[selected.id]
+                              ? "Dokumentum megnyitása"
+                              : "Dokumentum kitöltése"}
+                          </button>
+                        </div>
+                      )}
+
                       <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-card/60 px-3 py-2.5">
                         <span className="text-xs text-muted-foreground">Fizetendő</span>
                         <span className="font-mono text-sm text-primary">
@@ -551,8 +666,13 @@ function CityHall() {
                         disabled={pending}
                         className="mt-3 w-full rounded-xl bg-gold py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-105 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.98]"
                       >
-                        {pending ? "Feldolgozás…" : "Kérelem benyújtása"}
+                        {pending
+                          ? "Feldolgozás…"
+                          : documentForms[selected.id] && !docs[selected.id]
+                            ? "Dokumentum kitöltése"
+                            : "Kérelem benyújtása"}
                       </button>
+
                     </div>
                   ) : (
                     <div className="flex h-full min-h-48 flex-col items-center justify-center text-center">
