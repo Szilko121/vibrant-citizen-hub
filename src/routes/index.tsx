@@ -609,6 +609,43 @@ function CityHall() {
                         ))}
                       </ul>
 
+                      {documentForms[selected.id] && (
+                        <div
+                          className={`mt-4 rounded-xl border px-3 py-3 ${
+                            docs[selected.id]
+                              ? "border-success/50 bg-success/10"
+                              : "border-border bg-card/60"
+                          }`}
+                        >
+                          <p className="flex items-center gap-2 text-xs font-semibold">
+                            {docs[selected.id] ? (
+                              <>
+                                <Check className="size-3.5 text-success" /> Dokumentum kitöltve
+                              </>
+                            ) : (
+                              <>
+                                <FileSignature className="size-3.5 text-primary" /> Dokumentum
+                                kitöltése szükséges
+                              </>
+                            )}
+                          </p>
+                          <p className="mt-1 font-mono text-[10px] text-muted-foreground">
+                            Nyomtatvány {documentForms[selected.id].formNumber}
+                            {docs[selected.id]
+                              ? ` · aláírta: ${docs[selected.id].signedBy}`
+                              : ""}
+                          </p>
+                          <button
+                            onClick={() => setDocService(selected)}
+                            className="mt-2.5 w-full rounded-lg border border-primary/40 bg-primary/10 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/15 active:scale-[0.98]"
+                          >
+                            {docs[selected.id]
+                              ? "Dokumentum megnyitása"
+                              : "Dokumentum kitöltése"}
+                          </button>
+                        </div>
+                      )}
+
                       <div className="mt-4 flex items-center justify-between rounded-xl border border-border bg-card/60 px-3 py-2.5">
                         <span className="text-xs text-muted-foreground">Fizetendő</span>
                         <span className="font-mono text-sm text-primary">
@@ -621,8 +658,13 @@ function CityHall() {
                         disabled={pending}
                         className="mt-3 w-full rounded-xl bg-gold py-3 text-sm font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-105 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-60 active:scale-[0.98]"
                       >
-                        {pending ? "Feldolgozás…" : "Kérelem benyújtása"}
+                        {pending
+                          ? "Feldolgozás…"
+                          : documentForms[selected.id] && !docs[selected.id]
+                            ? "Dokumentum kitöltése"
+                            : "Kérelem benyújtása"}
                       </button>
+
                     </div>
                   ) : (
                     <div className="flex h-full min-h-48 flex-col items-center justify-center text-center">
