@@ -20,7 +20,12 @@ import {
   X,
   ChevronRight,
   ChevronLeft,
+  FileSignature,
 } from "lucide-react";
+
+import { DocumentSheet } from "@/components/DocumentSheet";
+import { documentForms, type FilledDoc } from "@/lib/documents";
+
 
 import heroImage from "@/assets/cityhall-hero.jpg";
 import sealImage from "@/assets/nexus-seal.png";
