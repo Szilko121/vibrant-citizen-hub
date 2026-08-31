@@ -8,7 +8,7 @@ type Props = {
   form: DocForm;
   serviceTitle: string;
   playerName: string;
-  existing?: FilledDoc;
+  existing?: FilledDoc | undefined;
   onBack: () => void;
   onComplete: (doc: FilledDoc) => void;
 };
