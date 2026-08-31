@@ -500,6 +500,8 @@ function CityHall() {
                   {category.services.map((service) => {
                     const Icon = service.icon;
                     const active = selected?.id === service.id;
+                    const filled = Boolean(docs[service.id]);
+                    const hasForm = Boolean(documentForms[service.id]);
                     return (
                       <article
                         key={service.id}
@@ -507,7 +509,9 @@ function CityHall() {
                         className={`group cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-primary/10 active:translate-y-0 active:scale-[0.995] ${
                           active
                             ? "border-primary/70 bg-primary/10 shadow-md shadow-primary/10"
-                            : "border-border bg-secondary/25 hover:border-primary/40 hover:bg-secondary/40"
+                            : filled
+                              ? "border-success/60 bg-success/5 hover:border-success/80"
+                              : "border-border bg-secondary/25 hover:border-primary/40 hover:bg-secondary/40"
                         }`}
                       >
                         <div className="relative h-32 overflow-hidden">
@@ -523,6 +527,25 @@ function CityHall() {
                           <span className="absolute top-2.5 left-2.5 grid size-9 place-items-center rounded-lg border border-border bg-card/85 text-primary backdrop-blur-sm">
                             <Icon className="size-4.5" />
                           </span>
+                          {hasForm && (
+                            <span
+                              className={`absolute top-2.5 right-2.5 flex items-center gap-1 rounded-full border px-2 py-1 font-mono text-[10px] backdrop-blur-sm ${
+                                filled
+                                  ? "border-success/60 bg-success/15 text-success"
+                                  : "border-border bg-card/85 text-muted-foreground"
+                              }`}
+                            >
+                              {filled ? (
+                                <>
+                                  <Check className="size-3" /> Kitöltve
+                                </>
+                              ) : (
+                                <>
+                                  <FileSignature className="size-3" /> Kitöltendő
+                                </>
+                              )}
+                            </span>
+                          )}
                         </div>
                         <div className="p-4">
                           <h3 className="text-sm font-semibold">{service.title}</h3>
@@ -543,15 +566,17 @@ function CityHall() {
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelected(service);
+                              if (hasForm && !filled) setDocService(service);
                             }}
                             className="rounded-lg bg-gold px-3.5 py-2 text-xs font-semibold text-primary-foreground shadow-sm transition-all duration-200 hover:brightness-105 hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:outline-none active:scale-[0.97]"
                           >
-                            Igénylés
+                            {hasForm && !filled ? "Kitöltés" : "Igénylés"}
                           </button>
                         </div>
                       </article>
                     );
                   })}
+
                 </div>
 
                 {/* Összegző panel */}
