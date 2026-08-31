@@ -51,7 +51,7 @@ export function DocumentSheet({
   const finish = () => {
     onComplete({
       values,
-      signedBy: values.fullName?.trim() || playerName,
+      signedBy: values['fullName']?.trim() || playerName,
       signedAt: new Date().toLocaleString("hu-HU"),
     });
   };
@@ -163,7 +163,7 @@ export function DocumentSheet({
                   <span
                     className={`signature absolute bottom-1 left-1 ${signing ? "signature-writing" : ""}`}
                   >
-                    {values.fullName?.trim() || playerName}
+                    {values['fullName']?.trim() || playerName}
                   </span>
                 )}
               </div>
