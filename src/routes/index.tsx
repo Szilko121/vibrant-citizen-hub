@@ -339,10 +339,12 @@ function CityHall() {
 
   if (!visible) return null;
 
-  if (docService && documentForms[docService.id]) {
+  const activeForm = docService ? documentForms[docService.id] : undefined;
+
+  if (docService && activeForm) {
     return (
       <DocumentSheet
-        form={documentForms[docService.id]}
+        form={activeForm}
         serviceTitle={docService.title}
         playerName={player.name}
         existing={docs[docService.id]}
@@ -636,9 +638,9 @@ function CityHall() {
                             )}
                           </p>
                           <p className="mt-1 font-mono text-[10px] text-muted-foreground">
-                            Nyomtatvány {documentForms[selected.id].formNumber}
+                            Nyomtatvány {documentForms[selected.id]?.formNumber}
                             {docs[selected.id]
-                              ? ` · aláírta: ${docs[selected.id].signedBy}`
+                              ? ` · aláírta: ${docs[selected.id]?.signedBy}`
                               : ""}
                           </p>
                           <button
