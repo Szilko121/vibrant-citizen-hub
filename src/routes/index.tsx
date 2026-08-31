@@ -259,6 +259,9 @@ function CityHall() {
   const [pending, setPending] = useState(false);
   const [visible, setVisible] = useState(!isInGame());
   const [player, setPlayer] = useState<PlayerData>(MOCK_PLAYER);
+  const [docs, setDocs] = useState<Record<string, FilledDoc>>({});
+  const [docService, setDocService] = useState<Service | null>(null);
+
 
   const category = categories.find((c) => c.id === activeCategory) ?? null;
 
